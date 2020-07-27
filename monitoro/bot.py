@@ -8,9 +8,17 @@ import click
 
 logging.basicConfig(level=logging.INFO)
 
+DATA_DIR = os.environ.get("MT_DATA", "data")
+MONITORING_FILE = os.path.join(DATA_DIR, "monitoring.yaml")
 
 statuses = {}
 monitoring = {}
+
+try:
+    with open(MONITORING_FILE) as f:
+        monitoring = yaml.safe_load(f.read())
+except FileNotFoundError:
+    logging.warn("Could not find previous monitoring data: %s", MONITORING_FILE)
 
 
 @click.group()
@@ -26,8 +34,14 @@ def watch(bot_id):
     dm_channel = smalld.post("/users/@me/channels", {"recipient_id": watcher_id})
 
     monitoring.update(
-        {bot_id: monitoring.get(bot_id, []) + [(watcher_id, dm_channel.id)]}
+        {
+            bot_id: monitoring.get(bot_id, [])
+            + [{"watcher": watcher_id, "dm_channel": dm_channel.id}]
+        }
     )
+
+    with open(MONITORING_FILE, "w") as f:
+        yaml.dump(monitoring, f)
 
     smalld.post(
         f"/channels/{dm_channel.id}/messages",
@@ -52,9 +66,9 @@ def on_presence_update(update):
         statuses[monitored] = update.status
 
         if update.status == "offline":
-            for user, channel in monitored_by:
+            for user in monitored_by:
                 smalld.post(
-                    f"/channels/{channel}/messages",
+                    f"/channels/{user['dm_channel']}/messages",
                     {"content": f"{update.user.id} went {update.status}"},
                 )
 

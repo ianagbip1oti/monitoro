@@ -1,4 +1,5 @@
 config.yaml
+data
 tags
 *.pyc
 .env
