@@ -1,5 +1,7 @@
 # Monitoro
 
+[![Discord](https://img.shields.io/discord/417389758470422538)](https://discord.gg/3aTVQtz)
+
 Discord bot that monitors the online status of other Discord bots.
 
 ## Commands
