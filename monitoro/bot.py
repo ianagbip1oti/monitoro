@@ -44,12 +44,9 @@ smalld = SmallD(
 
 @smalld.on_presence_update
 def on_presence_update(update):
-    print(str(monitoring))
     monitored = update.user.id
     monitored_by = monitoring.get(monitored, [])
     previous_status = statuses.get(monitored, None)
-
-    print("monitored by: " + str(monitored_by))
 
     if monitored_by and update.status != previous_status:
         statuses[monitored] = update.status
