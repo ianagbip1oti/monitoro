@@ -6,14 +6,14 @@ import os
 from dataclasses import dataclass
 import click
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 statuses = {}
 monitoring = {}
 
 
-@click.group("mon")
+@click.group()
 def monitoro():
     pass
 
@@ -31,10 +31,10 @@ def watch(bot_id):
 
     smalld.post(
         f"/channels/{dm_channel.id}/messages",
-        {"content": f"You are now monitoring {bot_id}"},
+        {"content": f"You are now watching {bot_id}"},
     )
 
-    click.echo(f"You are now monitoring {bot_id}")
+    click.echo(f"You are now watching {bot_id}")
 
 
 smalld = SmallD(
@@ -60,5 +60,5 @@ def on_presence_update(update):
 
 
 def run():
-    with SmallDCliRunner(smalld, monitoro, prefix="mon!"):
+    with SmallDCliRunner(smalld, monitoro, prefix=""):
         smalld.run()
