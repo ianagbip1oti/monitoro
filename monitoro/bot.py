@@ -1,66 +1,67 @@
 from smalld import SmallD, Intent
+from smalld_click import SmallDCliRunner, get_conversation
 import logging
 import yaml
 import os
 from dataclasses import dataclass
+import click
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
-
-class Config:
-    def __init__(self, yaml):
-        self.yaml = yaml
-
-    @property
-    def notification_channel(self):
-        return self.yaml["notification_channel"]
-
-    def find_monitored(self, user_id):
-        return next(
-            (
-                name
-                for name, cfg in self.yaml["monitor"].items()
-                if str(cfg["id"]) == user_id
-            ),
-            None,
-        )
-
-    def find_user_id(self, user_name):
-        return self.yaml["users"][user_name]
-
-    def find_pings(self, name):
-        monitored = self.yaml["monitor"][name]
-
-        return (self.find_user_id(n) for n in monitored.get("notify", []))
-
-
-with open(os.environ.get("MT_CONFIG", "config.yaml")) as f:
-    CONFIG = Config(yaml.safe_load(f.read()))
-
-
-smalld = SmallD(intents=Intent.GUILD_PRESENCES)
 
 statuses = {}
+monitoring = {}
+
+
+@click.group("mon")
+def monitoro():
+    pass
+
+
+@monitoro.command()
+@click.argument("bot_id", nargs=1)
+def watch(bot_id):
+    watcher_id = get_conversation().user_id
+
+    dm_channel = smalld.post("/users/@me/channels", {"recipient_id": watcher_id})
+
+    monitoring.update(
+        {bot_id: monitoring.get(bot_id, []) + [(watcher_id, dm_channel.id)]}
+    )
+
+    smalld.post(
+        f"/channels/{dm_channel.id}/messages",
+        {"content": f"You are now monitoring {bot_id}"},
+    )
+
+    click.echo(f"You are now monitoring {bot_id}")
+
+
+smalld = SmallD(
+    intents=Intent.GUILD_MESSAGES | Intent.DIRECT_MESSAGES | Intent.GUILD_PRESENCES
+)
 
 
 @smalld.on_presence_update
 def on_presence_update(update):
-    monitored = CONFIG.find_monitored(update.user.id)
+    print(str(monitoring))
+    monitored = update.user.id
+    monitored_by = monitoring.get(monitored, [])
     previous_status = statuses.get(monitored, None)
 
-    if monitored and update.status != previous_status:
+    print("monitored by: " + str(monitored_by))
+
+    if monitored_by and update.status != previous_status:
         statuses[monitored] = update.status
 
-        pings = ""
         if update.status == "offline":
-            pings = " ".join(
-                f"<@{user_id}>" for user_id in CONFIG.find_pings(monitored)
-            )
-
-        smalld.post(
-            f"/channels/{CONFIG.notification_channel}/messages",
-            {"content": f"{monitored} went {update.status} {pings}"},
-        )
+            for user, channel in monitored_by:
+                smalld.post(
+                    f"/channels/{channel}/messages",
+                    {"content": f"{update.user.id} went {update.status}"},
+                )
 
 
-smalld.run()
+def run():
+    with SmallDCliRunner(smalld, monitoro, prefix="mon!"):
+        smalld.run()

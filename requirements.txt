@@ -6,10 +6,12 @@
 #
 certifi==2020.6.20        # via requests
 chardet==3.0.4            # via requests
+click==7.1.2              # via smalld-click
 idna==2.10                # via requests
 pyyaml==5.3.1             # via -r requirements.in
 requests==2.24.0          # via smalld
 six==1.15.0               # via websocket-client
-smalld==0.1.5             # via -r requirements.in
+smalld-click==0.2.0       # via -r requirements.in
+smalld==0.1.5             # via -r requirements.in, smalld-click
 urllib3==1.25.10          # via requests
 websocket-client==0.57.0  # via smalld

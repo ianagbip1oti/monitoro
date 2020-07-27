@@ -1,4 +1,4 @@
 import monitoro.bot
 
 
-monitor.bot.run()
+monitoro.bot.run()
