@@ -13,4 +13,4 @@ lint:
 	pytype monitoro/
 
 run:
-	SMALLD_TOKEN=$$(cat .token) python -m monitoro
+	python -m monitoro

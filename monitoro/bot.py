@@ -5,6 +5,7 @@ import yaml
 import os
 from dataclasses import dataclass
 import click
+import monitoro.discord as discord
 
 logging.basicConfig(level=logging.INFO)
 
@@ -43,12 +44,14 @@ def watch(bot_id):
     with open(MONITORING_FILE, "w") as f:
         yaml.dump(monitoring, f)
 
+    watching = discord.get_user(smalld, bot_id)
+    confirmation = f"You are now watching **{watching.username}**"
+
     smalld.post(
-        f"/channels/{dm_channel.id}/messages",
-        {"content": f"You are now watching {bot_id}"},
+        f"/channels/{dm_channel.id}/messages", {"content": confirmation},
     )
 
-    click.echo(f"You are now watching {bot_id}")
+    click.echo(confirmation)
 
 
 smalld = SmallD(
@@ -58,21 +61,23 @@ smalld = SmallD(
 
 @smalld.on_presence_update
 def on_presence_update(update):
-    monitored = update.user.id
-    monitored_by = monitoring.get(monitored, [])
-    previous_status = statuses.get(monitored, None)
+    monitored_id = update.user.id
+    monitored_by = monitoring.get(monitored_id, [])
+    previous_status = statuses.get(monitored_id, None)
 
     if monitored_by and update.status != previous_status:
-        statuses[monitored] = update.status
+        statuses[monitored_id] = update.status
 
         if update.status == "offline":
+            watching = discord.get_user(smalld, monitored_id)
+
             for user in monitored_by:
                 smalld.post(
                     f"/channels/{user['dm_channel']}/messages",
-                    {"content": f"{update.user.id} went {update.status}"},
+                    {"content": f"**{watching.username}** went {update.status}"},
                 )
 
 
 def run():
-    with SmallDCliRunner(smalld, monitoro, prefix=""):
+    with SmallDCliRunner(smalld, monitoro, prefix="", name="monitesto"):
         smalld.run()
