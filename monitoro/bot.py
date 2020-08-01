@@ -75,5 +75,5 @@ def on_presence_update(update):
 
 
 def run():
-    with SmallDCliRunner(smalld, monitoro, prefix="", name="monitesto"):
+    with SmallDCliRunner(smalld, monitoro, prefix="", name="monitoro"):
         smalld.run()
