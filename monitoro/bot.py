@@ -32,20 +32,14 @@ def monitoro():
 def watch(bot_id):
     watcher_id = get_conversation().user_id
 
-    dm_channel = smalld.post("/users/@me/channels", {"recipient_id": watcher_id})
-
-    monitoring.update(
-        {
-            bot_id: monitoring.get(bot_id, [])
-            + [{"watcher": watcher_id, "dm_channel": dm_channel.id}]
-        }
-    )
+    monitoring.update({bot_id: monitoring.get(bot_id, []) + [{"watcher": watcher_id}]})
 
     with open(MONITORING_FILE, "w") as f:
         yaml.dump(monitoring, f)
 
     watching = discord.get_user(smalld, bot_id)
     confirmation = f"You are now watching **{watching.username}**"
+    dm_channel = discord.get_dm_channel(smalld, watcher_id)
 
     smalld.post(
         f"/channels/{dm_channel.id}/messages", {"content": confirmation},
@@ -72,8 +66,10 @@ def on_presence_update(update):
             watching = discord.get_user(smalld, monitored_id)
 
             for user in monitored_by:
+                dm_channel = discord.get_dm_channel(smalld, user["watcher"])
+
                 smalld.post(
-                    f"/channels/{user['dm_channel']}/messages",
+                    f"/channels/{dm_channel.id}/messages",
                     {"content": f"**{watching.username}** went {update.status}"},
                 )
 
