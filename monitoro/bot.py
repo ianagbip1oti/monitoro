@@ -95,8 +95,10 @@ def on_presence_update(update):
 
 @smalld.on_guild_create
 def on_guild_create(create):
+    bot_ids = {m.user.id for m in create.get("members", []) if m.user.get("bot", False)}
+
     for update in create.get("presences", []):
-        if watchers.is_watched(update.user.id):
+        if update.user.id in bot_ids or watchers.is_watched(update.user.id):
             statuses[update.user.id] = update.status
 
 
