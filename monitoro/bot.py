@@ -49,6 +49,19 @@ def watch(bot_id):
         f"/channels/{dm_channel.id}/messages", {"content": confirmation},
     )
 
+    if guild_id := get_conversation().message.get("guild_id"):
+        smalld.send_gateway_payload(
+            {
+                "op": 8,
+                "d": {
+                    "guild_id": guild_id,
+                    "limit": 1,
+                    "presences": True,
+                    "user_ids": bot_id,
+                },
+            }
+        )
+
     click.echo(confirmation)
 
 
@@ -94,6 +107,7 @@ def on_presence_update(update):
 
 
 @smalld.on_guild_create
+@smalld.on_guild_members_chunk
 def on_guild_create(create):
     bot_ids = {m.user.id for m in create.get("members", []) if m.user.get("bot", False)}
 
