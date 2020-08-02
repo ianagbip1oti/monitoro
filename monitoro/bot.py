@@ -33,15 +33,14 @@ def monitoro():
 @monitoro.command()
 @click.argument("bot_id", nargs=1)
 def watch(bot_id):
-    watcher_id = get_conversation().user_id
-
-    watchers.add(bot_id=bot_id, watcher_id=watcher_id)
-
     watching = discord.get_user(smalld, bot_id)
 
     if not watching.get("bot", False):
         click.echo(f"{bot_id} is not a bot")
         click.get_current_context().abort()
+
+    watcher_id = get_conversation().user_id
+    watchers.add(bot_id=bot_id, watcher_id=watcher_id)
 
     confirmation = f"You are now watching **{watching.username}**"
     dm_channel = discord.get_dm_channel(smalld, watcher_id)
