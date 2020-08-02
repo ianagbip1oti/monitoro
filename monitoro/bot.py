@@ -42,13 +42,6 @@ def watch(bot_id):
     watcher_id = get_conversation().user_id
     watchers.add(bot_id=bot_id, watcher_id=watcher_id)
 
-    confirmation = f"You are now watching **{watching.username}**"
-    dm_channel = discord.get_dm_channel(smalld, watcher_id)
-
-    smalld.post(
-        f"/channels/{dm_channel.id}/messages", {"content": confirmation},
-    )
-
     if guild_id := get_conversation().message.get("guild_id"):
         smalld.send_gateway_payload(
             {
@@ -62,7 +55,20 @@ def watch(bot_id):
             }
         )
 
-    click.echo(confirmation)
+    click.echo(f"You are now watching **{watching.username}**")
+
+
+@monitoro.command()
+@click.argument("bot_id", nargs=1)
+def unwatch(bot_id):
+    watching = discord.get_user(smalld, bot_id)
+
+    watcher_id = get_conversation().user_id
+    watchers.remove(bot_id=bot_id, watcher_id=watcher_id)
+
+    who = f"**{watching.username}**" if watching.get("bot", False) else bot_id
+
+    click.echo(f"You have stopped watching {who}")
 
 
 @monitoro.command()

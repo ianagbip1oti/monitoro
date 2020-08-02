@@ -16,9 +16,21 @@ class Watchers:
 
     def add(self, bot_id, watcher_id):
         self.watchers.update(
-            {bot_id: self.watchers.get(bot_id, []) + [{"watcher": watcher_id}]}
+            {bot_id: self.get_watchers(bot_id) + [{"watcher": watcher_id}]}
         )
+        self.save()
 
+    def remove(self, bot_id, watcher_id):
+        self.watchers.update(
+            {
+                bot_id: [
+                    w for w in self.get_watchers(bot_id) if w["watcher"] != watcher_id
+                ]
+            }
+        )
+        self.save()
+
+    def save(self):
         with open(self.file, "w") as f:
             yaml.dump(self.watchers, f)
 
