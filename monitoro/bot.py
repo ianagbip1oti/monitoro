@@ -38,6 +38,11 @@ def watch(bot_id):
         yaml.dump(monitoring, f)
 
     watching = discord.get_user(smalld, bot_id)
+
+    if not watching.get("bot", False):
+        click.echo(f"{bot_id} is not a bot")
+        click.get_current_context().abort()
+
     confirmation = f"You are now watching **{watching.username}**"
     dm_channel = discord.get_dm_channel(smalld, watcher_id)
 
@@ -75,5 +80,7 @@ def on_presence_update(update):
 
 
 def run():
-    with SmallDCliRunner(smalld, monitoro, prefix="", name="monitoro"):
+    name = os.environ.get("MT_NAME", "monitoro")
+
+    with SmallDCliRunner(smalld, monitoro, prefix="", name=name):
         smalld.run()
