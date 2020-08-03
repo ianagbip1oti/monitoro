@@ -33,29 +33,34 @@ def monitoro():
 @monitoro.command()
 @click.argument("bot_id", nargs=1)
 def watch(bot_id):
-    watching = discord.get_user(smalld, bot_id)
+    guild_id = get_conversation().message.get("guild_id")
 
-    if not watching.get("bot", False):
-        click.echo(f"{bot_id} is not a bot")
+    if not guild_id:
+        click.echo(f"This command must be issued in a guild")
+        click.get_current_context().abort()
+
+    watching = discord.get_guild_member(smalld, guild_id, bot_id)
+
+    if not watching or not watching.user.get("bot", False):
+        click.echo(f"{bot_id} is not a bot in this guild")
         click.get_current_context().abort()
 
     watcher_id = get_conversation().user_id
     watchers.add(bot_id=bot_id, watcher_id=watcher_id)
 
-    if guild_id := get_conversation().message.get("guild_id"):
-        smalld.send_gateway_payload(
-            {
-                "op": 8,
-                "d": {
-                    "guild_id": guild_id,
-                    "limit": 1,
-                    "presences": True,
-                    "user_ids": bot_id,
-                },
-            }
-        )
+    smalld.send_gateway_payload(
+        {
+            "op": 8,
+            "d": {
+                "guild_id": guild_id,
+                "limit": 1,
+                "presences": True,
+                "user_ids": bot_id,
+            },
+        }
+    )
 
-    click.echo(f"You are now watching **{watching.username}**")
+    click.echo(f"You are now watching **{watching.user.username}**")
 
 
 @monitoro.command()
