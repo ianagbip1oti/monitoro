@@ -11,7 +11,7 @@ idna==2.10                # via requests
 pyyaml==5.3.1             # via -r requirements.in
 requests==2.24.0          # via smalld
 six==1.15.0               # via websocket-client
-smalld-click==0.2.1       # via -r requirements.in
+smalld-click==0.2.2       # via -r requirements.in
 smalld==0.1.7             # via -r requirements.in, smalld-click
 urllib3==1.25.10          # via requests
 websocket-client==0.57.0  # via smalld
