@@ -6,6 +6,7 @@ from smalld import Intent, SmallD
 from smalld_click import SmallDCliRunner, get_conversation
 
 import monitoro.discord as discord
+from monitoro.status import Status, Statuses
 from monitoro.watchers import Watchers
 
 logging.basicConfig(level=logging.INFO)
@@ -13,15 +14,13 @@ logging.basicConfig(level=logging.INFO)
 DATA_DIR = os.environ.get("MT_DATA", "data")
 MONITORING_FILE = os.path.join(DATA_DIR, "monitoring.yaml")
 
-statuses = {}
+statuses = Statuses()
 watchers = Watchers(MONITORING_FILE)
 
-STATUS_ICON_UNKNOWN = "❓"
 STATUS_ICONS = {
-    "online": "✅",
-    "idle": "✅",
-    "dnd": "✅",
-    "offline": "❌",
+    Status.UNKNOWN: "❓",
+    Status.ONLINE: "✅",
+    Status.OFFLINE: "❌",
 }
 
 
@@ -83,8 +82,7 @@ def status():
     for bot in (
         discord.get_user(smalld, bot_id) for bot_id in watchers.get_watching(watcher_id)
     ):
-        icon = STATUS_ICONS.get(statuses.get(bot.id), STATUS_ICON_UNKNOWN)
-
+        icon = STATUS_ICONS[statuses[bot.id]]
         click.echo(f"{icon} {bot.username}")
 
 
@@ -98,23 +96,25 @@ smalld = SmallD(
 
 @smalld.on_presence_update
 def on_presence_update(update):
-    monitored_id = update.user.id
-    monitored_by = watchers.get_watchers(monitored_id)
-    previous_status = statuses.get(monitored_id, None)
+    statuses.update_from_presence(update.user.id, update.status)
 
-    if monitored_by and update.status != previous_status:
-        statuses[monitored_id] = update.status
 
-        if update.status == "offline":
-            watching = discord.get_user(smalld, monitored_id)
+def notify_on_offline(bot_id):
+    monitored_by = watchers.get_watchers(bot_id)
 
-            for user in monitored_by:
-                dm_channel = discord.get_dm_channel(smalld, user["watcher"])
+    if monitored_by:
+        watching = discord.get_user(smalld, bot_id)
 
-                smalld.post(
-                    f"/channels/{dm_channel.id}/messages",
-                    {"content": f"**{watching.username}** went {update.status}"},
-                )
+        for user in monitored_by:
+            dm_channel = discord.get_dm_channel(smalld, user["watcher"])
+
+            smalld.post(
+                f"/channels/{dm_channel.id}/messages",
+                {"content": f"**{watching.username}** went offline"},
+            )
+
+
+statuses.add_listener(on_offline=notify_on_offline)
 
 
 @smalld.on_guild_create
@@ -124,7 +124,7 @@ def on_guild_create(create):
 
     for update in create.get("presences", []):
         if update.user.id in bot_ids or watchers.is_watched(update.user.id):
-            statuses[update.user.id] = update.status
+            statuses.update_from_presence(update.user.id, update.status)
 
 
 def run():
