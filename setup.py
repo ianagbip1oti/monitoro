@@ -8,6 +8,9 @@ def install_requires():
 
 setup(
     name="monitoro",
+    author="Princess Lana",
+    author_email="ianagbip1oti@gmail.com",
+    url="https://github.com/ianagbip1oti/monitoro",
     packages=find_packages(),
     use_scm_version=True,
     install_requires=install_requires(),
