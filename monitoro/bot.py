@@ -6,6 +6,7 @@ from smalld import Intent, SmallD
 from smalld_click import SmallDCliRunner, get_conversation
 
 import monitoro.discord as discord
+from monitoro.notifications import Notifications
 from monitoro.status import Status, Statuses
 from monitoro.watchers import Watchers
 
@@ -14,8 +15,18 @@ logging.basicConfig(level=logging.INFO)
 DATA_DIR = os.environ.get("MT_DATA", "data")
 MONITORING_FILE = os.path.join(DATA_DIR, "monitoring.yaml")
 
+smalld = SmallD(
+    intents=Intent.GUILDS
+    | Intent.GUILD_MESSAGES
+    | Intent.DIRECT_MESSAGES
+    | Intent.GUILD_PRESENCES
+)
+
 statuses = Statuses()
 watchers = Watchers(MONITORING_FILE)
+notifications = Notifications(smalld, watchers)
+
+statuses.add_listener(on_offline=notifications.notify_offline)
 
 STATUS_ICONS = {
     Status.UNKNOWN: "❓",
@@ -86,35 +97,9 @@ def status():
         click.echo(f"{icon} {bot.username}")
 
 
-smalld = SmallD(
-    intents=Intent.GUILDS
-    | Intent.GUILD_MESSAGES
-    | Intent.DIRECT_MESSAGES
-    | Intent.GUILD_PRESENCES
-)
-
-
 @smalld.on_presence_update
 def on_presence_update(update):
     statuses.update_from_presence(update.user.id, update.status)
-
-
-def notify_on_offline(bot_id):
-    monitored_by = watchers.get_watchers(bot_id)
-
-    if monitored_by:
-        watching = discord.get_user(smalld, bot_id)
-
-        for user in monitored_by:
-            dm_channel = discord.get_dm_channel(smalld, user["watcher"])
-
-            smalld.post(
-                f"/channels/{dm_channel.id}/messages",
-                {"content": f"**{watching.username}** went offline"},
-            )
-
-
-statuses.add_listener(on_offline=notify_on_offline)
 
 
 @smalld.on_guild_create
