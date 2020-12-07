@@ -1,0 +1,12 @@
+[reportpaths]
+source =
+  monitoro/
+  */site-packages/monitoro
+
+[run]
+source=
+  monitoro
+  test
+
+[report]
+show_missing=True

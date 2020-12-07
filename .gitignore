@@ -1,7 +1,9 @@
-config.yaml
-data
-tags
+*.egg-info
 *.pyc
+.coverage
+.eggs
 .env
 .pytype
 .token
+.tox
+data
