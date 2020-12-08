@@ -7,7 +7,8 @@ def install_requires():
 
 
 setup(
-    name="monitoro",
+    name="Monitoro",
+    description="Discord bot for monitoring the online status of Discord bots",
     author="Princess Lana",
     author_email="ianagbip1oti@gmail.com",
     url="https://github.com/ianagbip1oti/monitoro",

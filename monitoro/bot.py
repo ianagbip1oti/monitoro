@@ -1,19 +1,29 @@
 import logging
 import os
+from datetime import datetime
 
 import click
+import humanize
+from pkg_resources import get_distribution
 from smalld import Intent, SmallD
-from smalld_click import SmallDCliRunner, get_conversation
+from smalld import __version__ as smalld_version
+from smalld_click import SmallDCliRunner
+from smalld_click import __version__ as smalld_click_version
+from smalld_click import get_conversation
 
 import monitoro.discord as discord
 from monitoro.notifications import Notifications
 from monitoro.status import Status, Statuses
 from monitoro.watchers import Watchers
 
-logging.basicConfig(level=logging.INFO)
-
+NAME = os.environ.get("MT_NAME", "monitoro")
 DATA_DIR = os.environ.get("MT_DATA", "data")
 MONITORING_FILE = os.path.join(DATA_DIR, "monitoring.yaml")
+
+logging.basicConfig(level=logging.DEBUG if os.environ.get("MT_DEBUG") else logging.INFO)
+logger = logging.getLogger("monitoro.bot")
+
+start_time = datetime.now()
 
 smalld = SmallD(
     intents=Intent.GUILDS
@@ -106,6 +116,60 @@ def status():
         click.echo(f"{icon} {bot.username}")
 
 
+@monitoro.command()
+def about():
+    channel_id = get_conversation().channel_id
+
+    pkg = get_distribution("monitoro")
+
+    bots, users = watchers.get_counts()
+    stats_line = f"Watching **{bots} bots** for **{users} users**."
+
+    def github_link(org, repo, name=None):
+        return f"[{name or repo}](https://github.com/{org}/{repo})"
+
+    stack = {
+        ("ianagbip1oti", "monitoro"): pkg.version,
+        ("aymanizz", "smalld-click"): smalld_click_version,
+        ("princesslana", "smalld"): smalld_version,
+    }
+
+    stack_info = "\n".join(
+        f"{github_link(*repo)}: {version}" for repo, version in stack.items()
+    )
+
+    smalld.post(
+        f"/channels/{channel_id}/messages",
+        {
+            "embed": {
+                "title": "Monitoro",
+                "description": "Discord bot for monitoring the online status of Discord bots",
+                "thumbnail": {
+                    "url": (
+                        "https://raw.githubusercontent.com/"
+                        "ianagbip1oti/monitoro/master/avatar.png"
+                    )
+                },
+                "fields": [
+                    {"name": "Stats", "value": stats_line},
+                    {"name": "Prefix", "value": NAME, "inline": True},
+                    {
+                        "name": "Uptime",
+                        "value": humanize.naturaldelta(datetime.now() - start_time),
+                        "inline": True,
+                    },
+                    {
+                        "name": "Source",
+                        "value": github_link("ianagbip1oti", "monitoro", name="GitHub"),
+                        "inline": True,
+                    },
+                    {"name": "Stack", "value": stack_info},
+                ],
+            }
+        },
+    )
+
+
 @smalld.on_presence_update
 def on_presence_update(update):
     statuses.update_from_presence(update.user.id, update.status)
@@ -122,7 +186,6 @@ def on_guild_create(create):
 
 
 def run():
-    name = os.environ.get("MT_NAME", "monitoro")
 
-    with SmallDCliRunner(smalld, monitoro, prefix="", name=name):
+    with SmallDCliRunner(smalld, monitoro, prefix="", name=NAME):
         smalld.run()
