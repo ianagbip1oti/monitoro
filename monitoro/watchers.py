@@ -53,3 +53,17 @@ class Watchers:
 
     def is_watching(self, bot_id, user_id):
         return any(True for w in self.get_watchers(bot_id) if w["watcher"] == user_id)
+
+    def get_counts(self):
+        bot_count = len(
+            {bot_id for bot_id in self.watchers if self.get_watchers(bot_id)}
+        )
+        user_count = len(
+            {
+                user["watcher"]
+                for bot_watchers in self.watchers.values()
+                for user in bot_watchers
+            }
+        )
+
+        return (bot_count, user_count)

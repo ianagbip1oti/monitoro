@@ -1,3 +1,4 @@
+humanize==3.1.0
 pyyaml==5.3.1
 smalld==0.1.7
 smalld-click==0.2.2
