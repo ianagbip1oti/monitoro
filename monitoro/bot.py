@@ -26,7 +26,9 @@ statuses = Statuses()
 watchers = Watchers(MONITORING_FILE)
 notifications = Notifications(smalld, watchers)
 
-statuses.add_listener(on_offline=notifications.notify_offline)
+statuses.add_listener(
+    on_offline=notifications.notify_offline, on_online=notifications.on_online
+)
 
 STATUS_ICONS = {
     Status.UNKNOWN: "❓",
@@ -41,8 +43,15 @@ def monitoro():
 
 
 @monitoro.command()
+@click.option(
+    "--minutes",
+    default=0,
+    help="Minutes to wait before alerting",
+    type=int,
+    show_default=True,
+)
 @click.argument("bot_id", nargs=1)
-def watch(bot_id):
+def watch(bot_id, minutes):
     guild_id = get_conversation().message.get("guild_id")
 
     if not guild_id:
@@ -56,7 +65,7 @@ def watch(bot_id):
         click.get_current_context().abort()
 
     watcher_id = get_conversation().user_id
-    watchers.add(bot_id=bot_id, watcher_id=watcher_id)
+    watchers.add(bot_id=bot_id, watcher_id=watcher_id, minutes=minutes)
 
     smalld.send_gateway_payload(
         {

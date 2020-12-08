@@ -19,7 +19,7 @@ class Status(Enum):
 class Statuses:
     def __init__(self):
         self.statuses = {}
-        self.on_offline_listeners = []
+        self.listeners = []
 
     def __getitem__(self, bot_id):
         return self.statuses.get(bot_id, Status.UNKNOWN)
@@ -27,13 +27,16 @@ class Statuses:
     def update_from_presence(self, bot_id, presence):
         old = self[bot_id]
         new = Status.from_presence(presence)
-        changed = new != old
 
         self.statuses[bot_id] = new
 
-        if changed and new == Status.OFFLINE:
-            for l in self.on_offline_listeners:
+        if new != old:
+            for l in (l for s, l in self.listeners if s == new):
                 l(bot_id)
 
-    def add_listener(self, on_offline):
-        self.on_offline_listeners.append(on_offline)
+    def add_listener(self, on_offline=None, on_online=None):
+        if on_offline:
+            self.listeners.append((Status.OFFLINE, on_offline))
+
+        if on_online:
+            self.listeners.append((Status.ONLINE, on_online))

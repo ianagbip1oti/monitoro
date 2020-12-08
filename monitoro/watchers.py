@@ -14,10 +14,13 @@ class Watchers:
         except FileNotFoundError:
             logging.warn("Could not find previous monitoring data: %s", file)
 
-    def add(self, bot_id, watcher_id):
+    def add(self, bot_id, watcher_id, minutes=0):
         self.remove(bot_id, watcher_id)
         self.watchers.update(
-            {bot_id: self.get_watchers(bot_id) + [{"watcher": watcher_id}]}
+            {
+                bot_id: self.get_watchers(bot_id)
+                + [{"watcher": watcher_id, "minutes": minutes}]
+            }
         )
         self.save()
 
