@@ -49,7 +49,16 @@ STATUS_ICONS = {
 
 @click.group()
 def monitoro():
-    pass
+    """
+    Monitoro is a bot to monitor the online status of Discord bots.
+
+    Watching a bot means that you will receive a DM when Monitoro
+    detects that bot is offline.
+
+    \b
+    To get started watching a bot issue a watch command. For example:
+      monitoro watch 737425645771948123
+    """
 
 
 @monitoro.command()
@@ -62,6 +71,22 @@ def monitoro():
 )
 @click.argument("bot_id", nargs=1)
 def watch(bot_id, minutes):
+    """
+    Watch the online status of a bot.
+
+    If the watched bot goes offline you will be sent a DM informing you.
+    Providing the minutes parameter will mean a DM is only sent if the
+    watched bot has been offline for at least that number of minutes.
+
+    This command must be issued in a guild that has both Monitoro and
+    the bot to be watched as members.
+
+    \b
+    Examples:
+      monitoro watch 737425645771948123
+      monitoro watch --minutes 5 737425645771948123
+    """
+
     guild_id = get_conversation().message.get("guild_id")
 
     if not guild_id:
@@ -95,6 +120,14 @@ def watch(bot_id, minutes):
 @monitoro.command()
 @click.argument("bot_id", nargs=1)
 def unwatch(bot_id):
+    """
+    Stop watching the online status of a bot.
+
+    \b
+    Example:
+      monitoro unwatch 737425645771948123
+    """
+
     watching = discord.get_user(smalld, bot_id)
 
     watcher_id = get_conversation().user_id
@@ -107,6 +140,19 @@ def unwatch(bot_id):
 
 @monitoro.command()
 def status():
+    """
+    Display the status of all bots you are watching.
+
+    The status may be online (green checkmark), offline (red cross), or
+    unknown (question mark).
+    A bot's status being unknown means that Monitoro has not seen any
+    presence change event for that bot yet.
+
+    \b
+    Example:
+      monitoro status
+    """
+
     watcher_id = get_conversation().user_id
 
     for bot in (
@@ -118,6 +164,14 @@ def status():
 
 @monitoro.command()
 def about():
+    """
+    Display information and stats about Monitoro.
+
+    \b
+    Example:
+      monitoro about
+    """
+
     channel_id = get_conversation().channel_id
 
     pkg = get_distribution("monitoro")
@@ -186,6 +240,10 @@ def on_guild_create(create):
 
 
 def run():
+    def create_message(msg):
+        return {"content": f"```\n{msg}\n```"}
 
-    with SmallDCliRunner(smalld, monitoro, prefix="", name=NAME):
+    with SmallDCliRunner(
+        smalld, monitoro, prefix="", name=NAME, create_message=create_message
+    ):
         smalld.run()
