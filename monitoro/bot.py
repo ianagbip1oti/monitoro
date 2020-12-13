@@ -178,6 +178,9 @@ def about():
 
     bots, users = watchers.get_counts()
     stats_line = f"Watching **{bots} bots** for **{users} users**."
+    uptime = humanize.precisedelta(
+        datetime.now() - start_time, format="%.0f", minimum_unit="minutes"
+    )
 
     def github_link(org, repo, name=None):
         return f"[{name or repo}](https://github.com/{org}/{repo})"
@@ -208,15 +211,11 @@ def about():
                     {"name": "Stats", "value": stats_line},
                     {"name": "Prefix", "value": NAME, "inline": True},
                     {
-                        "name": "Uptime",
-                        "value": humanize.naturaldelta(datetime.now() - start_time),
-                        "inline": True,
-                    },
-                    {
                         "name": "Source",
                         "value": github_link("ianagbip1oti", "monitoro", name="GitHub"),
                         "inline": True,
                     },
+                    {"name": "Uptime", "value": uptime, "inline": True},
                     {"name": "Stack", "value": stack_info},
                 ],
             }
