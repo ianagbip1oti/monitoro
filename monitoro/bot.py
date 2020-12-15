@@ -211,12 +211,26 @@ def about():
                     {"name": "Stats", "value": stats_line},
                     {"name": "Prefix", "value": NAME, "inline": True},
                     {
-                        "name": "Source",
-                        "value": github_link("ianagbip1oti", "monitoro", name="GitHub"),
+                        "name": "Links",
+                        "value": "\n".join(
+                            (
+                                github_link(
+                                    "ianagbip1oti", "monitoro", name="Source on GitHub"
+                                ),
+                                "[Discord Bot List](https://top.gg/bot/737425645771948123)",
+                            )
+                        ),
                         "inline": True,
                     },
                     {"name": "Uptime", "value": uptime, "inline": True},
                     {"name": "Stack", "value": stack_info},
+                    {
+                        "name": "Icon",
+                        "value": (
+                            "Made by [Freepik](http://www.freepik.com/) "
+                            "from [www.flaticon.com](https://www.flaticon.com)"
+                        ),
+                    },
                 ],
             }
         },
