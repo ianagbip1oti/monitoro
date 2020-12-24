@@ -114,7 +114,9 @@ def watch(bot_id, minutes):
         }
     )
 
-    click.echo(f"You are now watching **{watching.user.username}**")
+    click.echo(
+        f"You are now watching **{watching.user.username}** (<@!{watching.user.id}>)"
+    )
 
 
 @monitoro.command()
@@ -155,11 +157,15 @@ def status():
 
     watcher_id = get_conversation().user_id
 
-    for bot in (
-        discord.get_user(smalld, bot_id) for bot_id in watchers.get_watching(watcher_id)
+    for bot in sorted(
+        (
+            discord.get_user(smalld, bot_id)
+            for bot_id in watchers.get_watching(watcher_id)
+        ),
+        key=lambda b: b.username.lower(),
     ):
         icon = STATUS_ICONS[statuses[bot.id]]
-        click.echo(f"{icon} {bot.username}")
+        click.echo(f"{icon} {bot.username} ({bot.id})")
 
 
 @monitoro.command()
@@ -253,10 +259,5 @@ def on_guild_create(create):
 
 
 def run():
-    def create_message(msg):
-        return {"content": f"```\n{msg}\n```"}
-
-    with SmallDCliRunner(
-        smalld, monitoro, prefix="", name=NAME, create_message=create_message
-    ):
+    with SmallDCliRunner(smalld, monitoro, prefix="", name=NAME):
         smalld.run()
