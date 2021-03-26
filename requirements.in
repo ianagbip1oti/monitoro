@@ -1,4 +1,4 @@
 humanize==3.1.0
-pyyaml==5.3.1
+pyyaml==5.4
 smalld==0.1.7
 smalld-click==0.2.2
