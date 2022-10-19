@@ -11,6 +11,7 @@ Monitoro does not need to be present on all servers that your bot is,
 but must share at least on server with your bot.
 
 ### Commands
+Make sure that the bot has the permissions to view the message history of the channel where you are sending the commands!
 
 ```console
 monitoro watch <bot id>
